@@ -54,7 +54,7 @@ public class AuthenticationService {
         String refreshToken = jwtService.generateRefreshToken(userDetails);
         addTokenToCookie(response, refreshToken);
         log.info("Access- и Refresh-токены были выданы пользователю {}", request.username());
-        return new AuthResponse(userDetails.getUsername(), accessToken);
+        return new AuthResponse(accessToken);
     }
 
     @Transactional
@@ -80,7 +80,7 @@ public class AuthenticationService {
             .token(generateTokenHash(refreshToken))
             .build());
         log.info("Предыдущий refresh-токен пользователя {} был отозван", username);
-        return new AuthResponse(userDetails.getUsername(), newAccessToken);
+        return new AuthResponse(newAccessToken);
     }
 
     @Transactional
