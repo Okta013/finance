@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
             LocalDateTime.now(),
             HttpStatus.BAD_REQUEST.value(),
-            HttpStatus.URI_TOO_LONG.getReasonPhrase(),
+            HttpStatus.BAD_REQUEST.getReasonPhrase(),
             ex.getMessage(),
             request.getRequestURI()
         );
