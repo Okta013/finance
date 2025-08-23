@@ -11,13 +11,16 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import ru.anikeeva.finance.entities.enums.ERole;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
 @Table(name = "users")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -35,6 +38,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private ERole role;
+
+    @Column(name = "balance")
+    private BigDecimal balance;
 
     @Override
     public String toString() {

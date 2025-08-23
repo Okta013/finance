@@ -14,6 +14,8 @@ import ru.anikeeva.finance.entities.user.User;
 import ru.anikeeva.finance.repositories.user.UserRepository;
 import ru.anikeeva.finance.services.auth.AuthenticationService;
 
+import java.math.BigDecimal;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -31,6 +33,7 @@ public class RegistrationService {
             .username(request.username())
             .password(passwordEncoder.encode(request.password()))
             .role(ERole.USER)
+            .balance(BigDecimal.ZERO)
             .build();
         userRepository.save(user);
         log.info("Пользователь {} успешно создан", request.username());
