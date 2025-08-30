@@ -25,6 +25,7 @@ import ru.anikeeva.finance.services.user.UserService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -93,18 +94,16 @@ public class TransactionService {
         transactionRepository.delete(transaction);
     }
 
-    public BigDecimal getAllIncome(final User user, final LocalDateTime startDate, final LocalDateTime endDate) {
-        return transactionRepository.findAllByUserIdAndTypeAndDateTimeBetween(user.getId(), ETransactionType.INCOME,
-                startDate, endDate)
-            .stream()
+    public BigDecimal getAmountByTransactionType(final User user, final LocalDateTime startDate,
+                                                 final LocalDateTime endDate, final ETransactionType transactionType) {
+        return transactionRepository.findAllByUserIdAndTypeAndDateTimeBetween(user.getId(), transactionType, startDate,
+            endDate).stream()
             .map(Transaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public BigDecimal getAllExpense(final User user, final LocalDateTime startDate, final LocalDateTime endDate) {
-        return transactionRepository.findAllByUserIdAndTypeAndDateTimeBetween(user.getId(), ETransactionType.EXPENSE,
-                startDate, endDate)
-            .stream()
-            .map(Transaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+    public List<Transaction> getAllTransactionsByType(final User user, final LocalDateTime startDate,
+                                                      final LocalDateTime endDate, ETransactionType type) {
+        return transactionRepository.findAllByUserIdAndTypeAndDateTimeBetween(user.getId(), type, startDate, endDate);
     }
 
     private Transaction findTransactionForUser(final UserDetailsImpl currentUser, final UUID transactionId) {
