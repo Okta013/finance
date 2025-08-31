@@ -1,4 +1,4 @@
-package ru.anikeeva.finance.dto.budget;
+package ru.anikeeva.finance.dto.analytics;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
