@@ -3,9 +3,14 @@ package ru.anikeeva.finance.services.budget;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import ru.anikeeva.finance.dto.budget.CreateTransactionRequest;
 import ru.anikeeva.finance.dto.budget.CreateTransactionResponse;
 import ru.anikeeva.finance.dto.budget.TransactionResponse;
@@ -16,6 +21,7 @@ import ru.anikeeva.finance.entities.user.User;
 import ru.anikeeva.finance.exceptions.EmptyRequestException;
 import ru.anikeeva.finance.exceptions.EntityNotFoundException;
 import ru.anikeeva.finance.exceptions.InsufficientFundsException;
+import ru.anikeeva.finance.exceptions.IntegrationException;
 import ru.anikeeva.finance.exceptions.NoRightsException;
 import ru.anikeeva.finance.mappers.TransactionMapper;
 import ru.anikeeva.finance.repositories.budget.TransactionRepository;
@@ -24,6 +30,8 @@ import ru.anikeeva.finance.security.impl.UserDetailsImpl;
 import ru.anikeeva.finance.services.user.UserService;
 
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -36,6 +44,8 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
     private final UserRepository userRepository;
+    private final JobLauncher asyncJobLauncher;
+    private final Job importJob;
 
     @Transactional
     public CreateTransactionResponse createTransaction(final UserDetailsImpl currentUser,
@@ -104,6 +114,24 @@ public class TransactionService {
     public List<Transaction> getAllTransactionsByType(final User user, final LocalDateTime startDate,
                                                       final LocalDateTime endDate, ETransactionType type) {
         return transactionRepository.findAllByUserIdAndTypeAndDateTimeBetween(user.getId(), type, startDate, endDate);
+    }
+
+    public String uploadFileWithTransactions(final UserDetailsImpl currentUser, final MultipartFile file) {
+        try {
+            Path tempFile = Files.createTempFile("transactions-", ".csv");
+            file.transferTo(tempFile);
+            JobParameters params = new JobParametersBuilder()
+                .addString("input.file.path", tempFile.toString())
+                .addString("userId", currentUser.getId().toString())
+                .addLong("time", System.currentTimeMillis())
+                .addString("jobId", UUID.randomUUID().toString())
+                .toJobParameters();
+            asyncJobLauncher.run(importJob, params);
+            return "Импорт файла запущен";
+        } catch (Exception e) {
+            log.error("Ошибка загрузки csv-файла", e);
+            throw new IntegrationException("Ошибка загрузки файла .csv");
+        }
     }
 
     private Transaction findTransactionForUser(final UserDetailsImpl currentUser, final UUID transactionId) {

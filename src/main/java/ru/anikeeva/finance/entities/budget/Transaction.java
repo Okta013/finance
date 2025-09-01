@@ -59,6 +59,9 @@ public class Transaction {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "job_id")
+    private Long jobId;
+
     @Override
     public String toString() {
         return "Transaction [id=" + id + ", user=" + user + ", amount=" + amount + ", category=" + category;
@@ -81,5 +84,17 @@ public class Transaction {
             return other.id == null;
         }
         else return id.equals(other.id);
+    }
+
+    public String getTypeAsString() {
+        return type != null ? type.name() : null;
+    }
+
+    public String getCategoryAsString() {
+        return category != null ? category.name() : null;
+    }
+
+    public String getCurrencyCode() {
+        return currency != null ? currency.getCurrencyCode() : null;
     }
 }
