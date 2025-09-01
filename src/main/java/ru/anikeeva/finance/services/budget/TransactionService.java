@@ -24,6 +24,8 @@ import ru.anikeeva.finance.security.impl.UserDetailsImpl;
 import ru.anikeeva.finance.services.user.UserService;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -90,6 +92,18 @@ public class TransactionService {
     public void deleteTransaction(final UserDetailsImpl currentUser, final UUID transactionId) {
         Transaction transaction = findTransactionForUser(currentUser, transactionId);
         transactionRepository.delete(transaction);
+    }
+
+    public BigDecimal getAmountByTransactionType(final User user, final LocalDateTime startDate,
+                                                 final LocalDateTime endDate, final ETransactionType transactionType) {
+        return transactionRepository.findAllByUserIdAndTypeAndDateTimeBetween(user.getId(), transactionType, startDate,
+            endDate).stream()
+            .map(Transaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public List<Transaction> getAllTransactionsByType(final User user, final LocalDateTime startDate,
+                                                      final LocalDateTime endDate, ETransactionType type) {
+        return transactionRepository.findAllByUserIdAndTypeAndDateTimeBetween(user.getId(), type, startDate, endDate);
     }
 
     private Transaction findTransactionForUser(final UserDetailsImpl currentUser, final UUID transactionId) {
