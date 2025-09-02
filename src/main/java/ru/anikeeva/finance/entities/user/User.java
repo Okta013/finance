@@ -15,6 +15,7 @@ import lombok.Setter;
 import ru.anikeeva.finance.entities.enums.ERole;
 
 import java.math.BigDecimal;
+import java.util.Currency;
 import java.util.UUID;
 
 @Entity
@@ -41,6 +42,9 @@ public class User {
 
     @Column(name = "balance")
     private BigDecimal balance;
+
+    @Column(name = "base_currency")
+    private Currency baseCurrency;
 
     @Override
     public String toString() {

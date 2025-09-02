@@ -47,11 +47,14 @@ public class Transaction {
     @Column(name = "category", nullable = false)
     private ETransactionCategory category;
 
-    @Column(name = "amount", nullable = false)
+    @Column(name = "initial_amount")
     private BigDecimal amount;
 
-    @Column(name = "currency")
+    @Column(name = "initial_currency")
     private Currency currency;
+
+    @Column(name = "amount_in_base_currency")
+    private BigDecimal amountInBaseCurrency;
 
     @Column(name = "date_time", nullable = false)
     private LocalDateTime dateTime;

@@ -1,6 +1,7 @@
 package ru.anikeeva.finance.exceptions;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -9,10 +10,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
     @ExceptionHandler(EmptyRequestException.class)
     public ResponseEntity<ErrorResponse> handleEmptyRequestException(EmptyRequestException ex,
                                                                      HttpServletRequest request) {
+        log.error("Перехвачен EmptyRequestException: {} | URI: {}", ex.getMessage(), request.getRequestURI());
         ErrorResponse error = new ErrorResponse(
             LocalDateTime.now(),
             HttpStatus.BAD_REQUEST.value(),
@@ -26,6 +29,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException ex,
                                                                        HttpServletRequest request) {
+        log.error("Перехвачен EntityNotFoundException: {} | URI: {}", ex.getMessage(), request.getRequestURI());
         ErrorResponse error = new ErrorResponse(
             LocalDateTime.now(),
             HttpStatus.NOT_FOUND.value(),
@@ -38,6 +42,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoRightsException.class)
     public ResponseEntity<ErrorResponse> handleNoRightsException(NoRightsException ex, HttpServletRequest request) {
+        log.error("Перехвачен NoRightsException: {} | URI: {}", ex.getMessage(), request.getRequestURI());
         ErrorResponse error = new ErrorResponse(
             LocalDateTime.now(),
             HttpStatus.FORBIDDEN.value(),
@@ -51,6 +56,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InsufficientFundsException.class)
     public ResponseEntity<ErrorResponse> handleInsufficientFundsException(InsufficientFundsException ex,
                                                                           HttpServletRequest request) {
+        log.error("Перехвачен InsufficientFundsException: {} | URI: {}", ex.getMessage(), request.getRequestURI());
         ErrorResponse error = new ErrorResponse(
             LocalDateTime.now(),
             HttpStatus.BAD_REQUEST.value(),
@@ -66,6 +72,7 @@ public class GlobalExceptionHandler {
         BadDataException.class
     })
     public ResponseEntity<ErrorResponse> handleIntegrationException(Exception e, HttpServletRequest request) {
+        log.error("Перехвачен {}: {} | URI: {}", e.getClass().getSimpleName(), e.getMessage(), request.getRequestURI());
         ErrorResponse error = new ErrorResponse(
             LocalDateTime.now(),
             HttpStatus.CONFLICT.value(),
@@ -74,5 +81,19 @@ public class GlobalExceptionHandler {
             request.getRequestURI()
         );
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception e, HttpServletRequest request) {
+        log.error("Перехвачено необработанное исключение: {} | URI: {}", e.getMessage(), request.getRequestURI());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+            "Произошла непредвиденная ошибка. Мы уже работаем над ее исправлением!",
+            request.getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

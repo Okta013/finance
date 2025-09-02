@@ -11,3 +11,12 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+currency-rates:
+  url:
+    central-bank: https://cbr.ru/currency_base/daily/
+    open-exchange:
+      base: https://openexchangerates.org/api/
+      additional: latest.json
+  open-exchange:
+    api-id: ${OPEN-EXCHANGE-API-ID}
