@@ -40,12 +40,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleNoRightsException(NoRightsException ex, HttpServletRequest request) {
         ErrorResponse error = new ErrorResponse(
             LocalDateTime.now(),
-            HttpStatus.BAD_REQUEST.value(),
-            HttpStatus.BAD_REQUEST.getReasonPhrase(),
+            HttpStatus.FORBIDDEN.value(),
+            HttpStatus.FORBIDDEN.getReasonPhrase(),
             ex.getMessage(),
             request.getRequestURI()
         );
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(InsufficientFundsException.class)
@@ -59,5 +59,20 @@ public class GlobalExceptionHandler {
             request.getRequestURI()
         );
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler({
+        IntegrationException.class,
+        BadDataException.class
+    })
+    public ResponseEntity<ErrorResponse> handleIntegrationException(Exception e, HttpServletRequest request) {
+        ErrorResponse error = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.CONFLICT.value(),
+            HttpStatus.CONFLICT.getReasonPhrase(),
+            e.getMessage(),
+            request.getRequestURI()
+        );
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 }

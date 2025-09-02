@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import ru.anikeeva.finance.dto.budget.CreateTransactionRequest;
 import ru.anikeeva.finance.dto.budget.CreateTransactionResponse;
 import ru.anikeeva.finance.dto.budget.TransactionResponse;
@@ -69,5 +70,13 @@ public class TransactionController {
                                                   @PathVariable UUID id) {
         transactionService.deleteTransaction(currentUser, id);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Импорт транзакций из файла .csv",
+        description = "Позволяет загрузить файл .csv с транзакциями, который инициирует batch-обработку и запись в базу")
+    @PostMapping("/import")
+    public ResponseEntity<String> uploadFileWithTransactions(@AuthenticationPrincipal UserDetailsImpl currentUser,
+                                                             @RequestParam MultipartFile file) {
+        return ResponseEntity.ok(transactionService.uploadFileWithTransactions(currentUser, file));
     }
 }
