@@ -15,6 +15,7 @@ import ru.anikeeva.finance.repositories.user.UserRepository;
 import ru.anikeeva.finance.services.auth.AuthenticationService;
 
 import java.math.BigDecimal;
+import java.util.Currency;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +35,7 @@ public class RegistrationService {
             .password(passwordEncoder.encode(request.password()))
             .role(ERole.USER)
             .balance(BigDecimal.ZERO)
+            .baseCurrency(Currency.getInstance("RUB"))
             .build();
         userRepository.save(user);
         log.info("Пользователь {} успешно создан", request.username());

@@ -15,6 +15,7 @@ import ru.anikeeva.finance.dto.budget.CreateTransactionRequest;
 import ru.anikeeva.finance.dto.budget.CreateTransactionResponse;
 import ru.anikeeva.finance.dto.budget.TransactionResponse;
 import ru.anikeeva.finance.dto.budget.UpdateTransactionRequest;
+import ru.anikeeva.finance.entities.budget.CurrencyRate;
 import ru.anikeeva.finance.entities.budget.Transaction;
 import ru.anikeeva.finance.entities.enums.ETransactionType;
 import ru.anikeeva.finance.entities.user.User;
@@ -30,9 +31,11 @@ import ru.anikeeva.finance.security.impl.UserDetailsImpl;
 import ru.anikeeva.finance.services.user.UserService;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,17 +49,21 @@ public class TransactionService {
     private final UserRepository userRepository;
     private final JobLauncher asyncJobLauncher;
     private final Job importJob;
+    private final CurrencyRateService currencyRateService;
 
     @Transactional
     public CreateTransactionResponse createTransaction(final UserDetailsImpl currentUser,
                                                        final CreateTransactionRequest request) {
         User user = userService.findUserByUsername(currentUser.getUsername());
         checkBalanceForTransaction(currentUser, request.type(), request.amount());
+        BigDecimal amount = request.currency().equals(user.getBaseCurrency())
+            ? request.amount()
+            : calculateAmountWithBaseCurrency(user, request.amount(), request.currency());
         Transaction transaction = Transaction.builder()
             .user(user)
             .type(request.type())
             .category(request.category())
-            .amount(request.amount())
+            .amount(amount)
             .dateTime(request.dateTime())
             .description(request.description())
             .build();
@@ -151,5 +158,15 @@ public class TransactionService {
                 user.getUsername(), amount, user.getBalance());
             throw new InsufficientFundsException("Баланс пользователя меньше суммы транзакции");
         }
+    }
+
+    private BigDecimal calculateAmountWithBaseCurrency(final User user, final BigDecimal amount, final Currency currency) {
+        Currency baseCurrency = user.getBaseCurrency();
+        CurrencyRate currencyRate = currencyRateService.getCurrencyRateByCurrency(currency);
+        CurrencyRate baseCurrencyRate = currencyRateService.getCurrencyRateByCurrency(baseCurrency);
+        BigDecimal rateInRub = currencyRate.getValueInRelationToBaseCurrency();
+        if (baseCurrency.equals(Currency.getInstance("RUB"))) return amount.multiply(rateInRub);
+        else return amount.multiply(rateInRub).divide(baseCurrencyRate.getValueInRelationToBaseCurrency(), 6,
+            RoundingMode.HALF_UP);
     }
 }

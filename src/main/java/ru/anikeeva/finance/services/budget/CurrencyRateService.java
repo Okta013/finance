@@ -13,6 +13,7 @@ import reactor.core.publisher.Mono;
 import ru.anikeeva.finance.dto.budget.OpenExchangeRatesResponse;
 import ru.anikeeva.finance.entities.budget.CurrencyRate;
 import ru.anikeeva.finance.entities.enums.ECurrencySource;
+import ru.anikeeva.finance.exceptions.EntityNotFoundException;
 import ru.anikeeva.finance.repositories.budget.CurrencyRateRepository;
 
 import java.math.BigDecimal;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -131,5 +133,19 @@ public class CurrencyRateService {
                     return Mono.error(e);
                 }
             }).doOnError(e -> log.error("Ошибка при обновлении курсов валют с OpenExchangeRates", e));
+    }
+
+    public CurrencyRate getCurrencyRateByCurrency(Currency currency) {
+        Optional<CurrencyRate> currencyRateByCentralBank = currencyRateRepository
+            .findTopByCurrencyAndSourceOrderByUpdatedAtDesc(currency, ECurrencySource.CENTRAL_BANK);
+        if (currencyRateByCentralBank.isPresent()) return currencyRateByCentralBank.get();
+        else {
+            Optional<CurrencyRate> currencyRateByOpenExchange = currencyRateRepository
+                .findTopByCurrencyAndSourceOrderByUpdatedAtDesc(currency, ECurrencySource.OPEN_EXCHANGE);
+            if (currencyRateByOpenExchange.isPresent()) return currencyRateByOpenExchange.get();
+            else {
+                throw new EntityNotFoundException("Курс валюты не найден");
+            }
+        }
     }
 }
