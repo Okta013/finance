@@ -22,10 +22,10 @@ public record CreateTransactionRequest(
 
     @Schema(description = "Сумма транзакции", example = "200.00")
     @NotNull
-    BigDecimal amount,
+    BigDecimal initialAmount,
 
     @Schema(description = "Валюта, по умолчанию RUB", example = "USD")
-    Currency currency,
+    Currency initialCurrency,
 
     @Schema(description = "Дата и время совершения транзакции", example = "2025-06-11T09:15:30")
     @NotNull
@@ -37,8 +37,8 @@ public record CreateTransactionRequest(
 )
 {
     public CreateTransactionRequest {
-        if (currency == null) {
-            currency = Currency.getInstance("RUB");
+        if (initialCurrency == null) {
+            initialCurrency = Currency.getInstance("RUB");
         }
     }
 }

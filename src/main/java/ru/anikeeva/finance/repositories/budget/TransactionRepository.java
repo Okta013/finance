@@ -5,7 +5,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import ru.anikeeva.finance.entities.budget.Transaction;
+import ru.anikeeva.finance.entities.enums.ETransactionCategory;
 import ru.anikeeva.finance.entities.enums.ETransactionType;
+import ru.anikeeva.finance.entities.user.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,4 +21,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
                                                                LocalDateTime startDate, LocalDateTime endDate);
 
     List<Transaction> findAllByJobId(long jobId);
+
+    List<Transaction> findAllByUserAndCategoryAndDateTimeBetween(User user, ETransactionCategory category,
+                                                                 LocalDateTime startDate, LocalDateTime endDate);
 }

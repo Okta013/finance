@@ -3,6 +3,7 @@ package ru.anikeeva.finance.mappers;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
+import ru.anikeeva.finance.dto.budget.CreateTransactionRequest;
 import ru.anikeeva.finance.dto.budget.TransactionResponse;
 import ru.anikeeva.finance.dto.budget.UpdateTransactionRequest;
 import ru.anikeeva.finance.entities.budget.Transaction;
@@ -14,4 +15,6 @@ public interface TransactionMapper {
 
     void updateTransactionFromUpdateTransactionRequest(UpdateTransactionRequest updateTransactionRequest,
                                                        @MappingTarget Transaction transaction);
+
+    Transaction toTransaction(CreateTransactionRequest createTransactionRequest);
 }

@@ -86,7 +86,7 @@ public class BatchConfig {
         reader.setLinesToSkip(1);
         DefaultLineMapper<TransactionImportDto> lineMapper = new DefaultLineMapper<>();
         DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
-        tokenizer.setNames("type", "category", "amount", "currency", "date_time", "description");
+        tokenizer.setNames("type", "category", "initialAmount", "initialCurrency", "date_time", "description");
         tokenizer.setDelimiter(",");
         lineMapper.setLineTokenizer(tokenizer);
         lineMapper.setFieldSetMapper(new TransactionFieldSetMapper());
@@ -98,8 +98,8 @@ public class BatchConfig {
     public JdbcBatchItemWriter<Transaction> transactionItemWriter(DataSource dataSource) {
         JdbcBatchItemWriter<Transaction> writer = new JdbcBatchItemWriter<>();
         writer.setItemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>());
-        String sql = "INSERT INTO transaction (id, user_id, type, category, amount, currency, date_time, description, job_id) " +
-            "VALUES (:id, :user.id, :typeAsString, :categoryAsString, :amount, :currencyCode, :dateTime, :description, :jobId)";
+        String sql = "INSERT INTO transaction (id, user_id, type, category, initialAmount, initialCurrency, date_time, description, job_id) " +
+            "VALUES (:id, :user.id, :typeAsString, :categoryAsString, :initialAmount, :currencyCode, :dateTime, :description, :jobId)";
         writer.setSql(sql);
         writer.setDataSource(dataSource);
         writer.afterPropertiesSet();

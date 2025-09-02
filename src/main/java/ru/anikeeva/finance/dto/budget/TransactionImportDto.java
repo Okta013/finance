@@ -14,10 +14,10 @@ public record TransactionImportDto(
     String category,
 
     @Schema(description = "Сумма транзакции")
-    BigDecimal amount,
+    BigDecimal initialAmount,
 
     @Schema(description = "Валюта транзакции")
-    String currency,
+    String initialCurrency,
 
     @Schema(description = "Дата и время транзакции в формате YYYY-MM-DD'T'HH:mm:ss")
     LocalDateTime date,

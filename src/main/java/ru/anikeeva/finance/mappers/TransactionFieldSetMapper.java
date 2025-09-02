@@ -27,8 +27,8 @@ public class TransactionFieldSetMapper implements FieldSetMapper<TransactionImpo
         return new TransactionImportDto(
             fieldSet.readString("type"),
             fieldSet.readString("category"),
-            fieldSet.readBigDecimal("amount"),
-            fieldSet.readString("currency"),
+            fieldSet.readBigDecimal("initialAmount"),
+            fieldSet.readString("initialCurrency"),
             dateTime,
             fieldSet.readString("description")
         );

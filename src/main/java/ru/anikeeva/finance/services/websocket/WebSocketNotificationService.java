@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import ru.anikeeva.finance.dto.notifications.BudgetNotification;
 
 import java.util.UUID;
 
@@ -17,5 +18,10 @@ public class WebSocketNotificationService {
         String destination = "/topic/jobs/" + userId;
         log.info("Пользователю {} отправляется уведомление: {}", userId, message);
         messagingTemplate.convertAndSend(destination, message);
+    }
+
+    public void sendBudgetWarning(String userId, BudgetNotification notification) {
+        log.info("Пользователю {} отправляется уведомление о превышении бюджета", userId);
+        messagingTemplate.convertAndSend("/topic/budget-alerts/" + userId, notification);
     }
 }

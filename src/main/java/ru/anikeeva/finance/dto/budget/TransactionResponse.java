@@ -22,10 +22,10 @@ public record TransactionResponse(
     ETransactionCategory category,
 
     @Schema(description = "Сумма транзакции")
-    BigDecimal amount,
+    BigDecimal initialAmount,
 
     @Schema(description = "Валюта транзакции (по умолчанию - RUB)")
-    Currency currency,
+    Currency initialCurrency,
 
     @Schema(description = "Дата и время совершения транзакции")
     LocalDateTime dateTime,
@@ -39,8 +39,8 @@ public record TransactionResponse(
             transaction.getId(),
             transaction.getType(),
             transaction.getCategory(),
-            transaction.getAmount(),
-            transaction.getCurrency(),
+            transaction.getInitialAmount(),
+            transaction.getInitialCurrency(),
             transaction.getDateTime(),
             transaction.getDescription()
         );
