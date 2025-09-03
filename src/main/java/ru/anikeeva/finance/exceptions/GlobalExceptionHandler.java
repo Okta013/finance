@@ -69,7 +69,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
         IntegrationException.class,
-        BadDataException.class
+        BadDataException.class,
+        BudgetLimitExceedingException.class
     })
     public ResponseEntity<ErrorResponse> handleIntegrationException(Exception e, HttpServletRequest request) {
         log.error("Перехвачен {}: {} | URI: {}", e.getClass().getSimpleName(), e.getMessage(), request.getRequestURI());

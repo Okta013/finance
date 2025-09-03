@@ -63,7 +63,7 @@ public class AnalyticsService {
         else {
             transactions = transactionService.getAllTransactionsByType(user, startDate, endDate, ETransactionType.EXPENSE);
         }
-        BigDecimal amount = transactions.stream().map(Transaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal amount = transactions.stream().map(Transaction::getInitialAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         List<AnalyticsCategoryResponse> categoriesResponses = getAnalyticsCategoryResponses(transactions, amount);
         return new AnalyticsCategoriesResponse(categoriesResponses);
     }
@@ -132,7 +132,7 @@ public class AnalyticsService {
         }
         Map<String, BigDecimal> sumsByCategory = transactions.stream()
             .collect(Collectors.groupingBy((Transaction t) -> t.getCategory().name(),
-                    Collectors.mapping(Transaction::getAmount, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
+                    Collectors.mapping(Transaction::getInitialAmount, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
         List<AnalyticsCategoryResponse> categoriesResponses = new ArrayList<>();
         for (var entry : sumsByCategory.entrySet()) {
             Double percents = entry.getValue()
@@ -158,7 +158,7 @@ public class AnalyticsService {
         BigDecimal amount = BigDecimal.ZERO;
         for (Transaction transaction : transactions) {
             if (transaction.getCategory().name().equals(category)) {
-                amount = amount.add(transaction.getAmount());
+                amount = amount.add(transaction.getInitialAmount());
             }
         }
         return amount;

@@ -44,8 +44,8 @@ public class ImportJobExecutionListener implements JobExecutionListener {
                 List<Transaction> transactions = transactionRepository.findAllByJobId(jobId);
                 BigDecimal totalChange = transactions.stream()
                     .map(tx -> tx.getType() == ETransactionType.INCOME
-                        ? tx.getAmount()
-                        : tx.getAmount().negate())
+                        ? tx.getInitialAmount()
+                        : tx.getInitialAmount().negate())
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
                 userService.recalculateBalance(userId, totalChange);
                 notificationService.notifyJobCompletion(UUID.fromString(userIdStr),

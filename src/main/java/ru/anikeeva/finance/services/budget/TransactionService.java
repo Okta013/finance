@@ -50,30 +50,24 @@ public class TransactionService {
     private final JobLauncher asyncJobLauncher;
     private final Job importJob;
     private final CurrencyRateService currencyRateService;
+    private final BudgetService budgetService;
 
     @Transactional
     public CreateTransactionResponse createTransaction(final UserDetailsImpl currentUser,
                                                        final CreateTransactionRequest request) {
         User user = userService.findUserByUsername(currentUser.getUsername());
-        checkBalanceForTransaction(currentUser, request.type(), request.amount());
-        BigDecimal amount = request.currency().equals(user.getBaseCurrency())
-            ? request.amount()
-            : calculateAmountWithBaseCurrency(user, request.amount(), request.currency());
-        Transaction transaction = Transaction.builder()
-            .user(user)
-            .type(request.type())
-            .category(request.category())
-            .amount(amount)
-            .dateTime(request.dateTime())
-            .description(request.description())
-            .build();
-        if (request.currency() != null) {
-            transaction.setCurrency(request.currency());
-        }
+        checkBalanceForTransaction(currentUser, request.type(), request.initialAmount());
+        BigDecimal amountInBaseCurrency = request.initialCurrency().equals(user.getBaseCurrency())
+            ? request.initialAmount()
+            : calculateAmountWithBaseCurrency(user, request.initialAmount(), request.initialCurrency());
+        budgetService.checkBudgetNotExceeded(user, request.category(), amountInBaseCurrency);
+        Transaction transaction = transactionMapper.toTransaction(request);
+        transaction.setAmountInBaseCurrency(amountInBaseCurrency);
+        transaction.setUser(user);
         transactionRepository.save(transaction);
         switch (request.type()) {
-            case INCOME -> user.setBalance(user.getBalance().add(request.amount()));
-            case EXPENSE -> user.setBalance(user.getBalance().subtract(request.amount()));
+            case INCOME -> user.setBalance(user.getBalance().add(request.initialAmount()));
+            case EXPENSE -> user.setBalance(user.getBalance().subtract(request.initialAmount()));
         }
         userRepository.save(user);
         return new CreateTransactionResponse(transaction.getId(), true);
@@ -95,12 +89,12 @@ public class TransactionService {
     public TransactionResponse updateTransaction(final UserDetailsImpl currentUser, final UUID transactionId,
                                                  final UpdateTransactionRequest request) {
         Transaction transaction = findTransactionForUser(currentUser, transactionId);
-        if (request.type() == null && request.category() == null && request.amount() == null &&
-            request.currency() == null && request.dateTime() == null && request.description() == null) {
+        if (request.type() == null && request.category() == null && request.initialAmount() == null &&
+            request.initialCurrency() == null && request.dateTime() == null && request.description() == null) {
             throw new EmptyRequestException("Запрос на изменение транзакции пустой");
         }
         ETransactionType type = request.type() != null ? request.type() : transaction.getType();
-        checkBalanceForTransaction(currentUser, type, request.amount());
+        checkBalanceForTransaction(currentUser, type, request.initialAmount());
         transactionMapper.updateTransactionFromUpdateTransactionRequest(request, transaction);
         transactionRepository.save(transaction);
         return transactionMapper.toTransactionResponse(transaction);
@@ -115,7 +109,7 @@ public class TransactionService {
                                                  final LocalDateTime endDate, final ETransactionType transactionType) {
         return transactionRepository.findAllByUserIdAndTypeAndDateTimeBetween(user.getId(), transactionType, startDate,
             endDate).stream()
-            .map(Transaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+            .map(Transaction::getInitialAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public List<Transaction> getAllTransactionsByType(final User user, final LocalDateTime startDate,
@@ -141,6 +135,16 @@ public class TransactionService {
         }
     }
 
+    public BigDecimal calculateAmountWithBaseCurrency(final User user, final BigDecimal amount, final Currency currency) {
+        Currency baseCurrency = user.getBaseCurrency();
+        CurrencyRate currencyRate = currencyRateService.getCurrencyRateByCurrency(currency);
+        CurrencyRate baseCurrencyRate = currencyRateService.getCurrencyRateByCurrency(baseCurrency);
+        BigDecimal rateInRub = currencyRate.getValueInRelationToBaseCurrency();
+        if (baseCurrency.equals(Currency.getInstance("RUB"))) return amount.multiply(rateInRub);
+        else return amount.multiply(rateInRub).divide(baseCurrencyRate.getValueInRelationToBaseCurrency(), 6,
+            RoundingMode.HALF_UP);
+    }
+
     private Transaction findTransactionForUser(final UserDetailsImpl currentUser, final UUID transactionId) {
         Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(() ->
             new EntityNotFoundException("Транзакция не найдена"));
@@ -158,15 +162,5 @@ public class TransactionService {
                 user.getUsername(), amount, user.getBalance());
             throw new InsufficientFundsException("Баланс пользователя меньше суммы транзакции");
         }
-    }
-
-    private BigDecimal calculateAmountWithBaseCurrency(final User user, final BigDecimal amount, final Currency currency) {
-        Currency baseCurrency = user.getBaseCurrency();
-        CurrencyRate currencyRate = currencyRateService.getCurrencyRateByCurrency(currency);
-        CurrencyRate baseCurrencyRate = currencyRateService.getCurrencyRateByCurrency(baseCurrency);
-        BigDecimal rateInRub = currencyRate.getValueInRelationToBaseCurrency();
-        if (baseCurrency.equals(Currency.getInstance("RUB"))) return amount.multiply(rateInRub);
-        else return amount.multiply(rateInRub).divide(baseCurrencyRate.getValueInRelationToBaseCurrency(), 6,
-            RoundingMode.HALF_UP);
     }
 }
