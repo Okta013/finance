@@ -32,10 +32,13 @@ public class RegistrationService {
         }
         User user = User.builder()
             .username(request.username())
+            .email(request.email())
             .password(passwordEncoder.encode(request.password()))
             .role(ERole.USER)
             .balance(BigDecimal.ZERO)
             .baseCurrency(Currency.getInstance("RUB"))
+            .isEnabled(true)
+            .isEmailActive(false)
             .build();
         userRepository.save(user);
         log.info("Пользователь {} успешно создан", request.username());

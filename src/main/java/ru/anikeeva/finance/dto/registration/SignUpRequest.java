@@ -1,6 +1,7 @@
 package ru.anikeeva.finance.dto.registration;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import ru.anikeeva.finance.annotations.PasswordMatches;
@@ -12,6 +13,10 @@ public record SignUpRequest(
     @NotBlank
     @Size(min = 3, max = 20)
     String username,
+
+    @Schema(description = "Адрес электронной почты пользователя", example = "example@mail.ru")
+    @Email
+    String email,
 
     @Schema(description = "Пароль пользователя", example = "Password123?")
     @NotBlank

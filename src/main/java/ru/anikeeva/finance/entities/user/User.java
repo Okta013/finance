@@ -33,6 +33,9 @@ public class User {
     @Column(name = "username", unique = true, nullable = false)
     private String username;
 
+    @Column(name = "email", unique = true)
+    private String email;
+
     @Column(name = "password", nullable = false)
     private String password;
 
@@ -45,6 +48,12 @@ public class User {
 
     @Column(name = "base_currency")
     private Currency baseCurrency;
+
+    @Column(name = "is_enabled", nullable = false)
+    private Boolean isEnabled = true;
+
+    @Column(name = "is_email_active", nullable = false)
+    private Boolean isEmailActive = false;
 
     @Override
     public String toString() {
