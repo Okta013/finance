@@ -24,6 +24,7 @@ public class UserDetailsImpl implements UserDetails {
     @JsonIgnore
     private String password;
     private GrantedAuthority authority;
+    private boolean isEnabled;
 
     public static UserDetailsImpl build(final User user) {
         GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(user.getRole().name());
@@ -31,7 +32,8 @@ public class UserDetailsImpl implements UserDetails {
             user.getId(),
             user.getUsername(),
             user.getPassword(),
-            grantedAuthority
+            grantedAuthority,
+            user.getIsEnabled()
         );
     }
 
@@ -48,5 +50,10 @@ public class UserDetailsImpl implements UserDetails {
     @Override
     public String getUsername() {
         return username;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return isEnabled;
     }
 }
