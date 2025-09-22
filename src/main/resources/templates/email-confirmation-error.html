@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ошибка подтверждения</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+        }
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            background-color: #f44336;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+        .error-mark:before, .error-mark:after {
+            position: absolute;
+            content: "";
+            height: 40px;
+            width: 5px;
+            background-color: white;
+            top: 20px;
+            left: 38px;
+        }
+        .error-mark:before {
+            transform: rotate(45deg);
+        }
+        .error-mark:after {
+            transform: rotate(-45deg);
+        }
+        h1 {
+            color: #f44336;
+            margin-bottom: 15px;
+        }
+        p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .message {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 25px;
+            color: #666;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background-color: #3e8e41;
+        }
+        .btn-secondary {
+            background-color: #607d8b;
+        }
+        .btn-secondary:hover {
+            background-color: #455a64;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="error-icon">
+        <div class="error-mark"></div>
+    </div>
+    <h1>Что-то пошло не так</h1>
+    <p>Не удалось подтвердить ваш email адрес.</p>
+    <div class="message" th:if="${errorMessage}">
+        <p th:text="${errorMessage}">Детали ошибки</p>
+    </div>
+    <p>Пожалуйста, попробуйте снова или обратитесь в службу поддержки!</p>
+</div>
+</body>
+</html>

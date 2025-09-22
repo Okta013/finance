@@ -88,6 +88,12 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public void confirmEmail(final User user) {
+        user.setIsEmailActive(true);
+        user.setIsMailingAgree(true);
+        userRepository.save(user);
+    }
+
     private void checkRightsForActionsWithUsers(final User user, final UUID id) {
         if (!user.getId().equals(id) && !user.getRole().equals(ERole.ADMIN)) {
             throw new NoRightsException("У пользователя нет прав на просмотр выбранного профиля");

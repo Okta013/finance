@@ -55,6 +55,9 @@ public class User {
     @Column(name = "is_email_active", nullable = false)
     private Boolean isEmailActive = false;
 
+    @Column(name = "is_mailing_agree", nullable = false)
+    private Boolean isMailingAgree = false;
+
     @Override
     public String toString() {
         return username;

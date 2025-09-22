@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.anikeeva.finance.dto.mail.ConfirmEmailResponse;
 import ru.anikeeva.finance.dto.user.ChangePasswordRequest;
 import ru.anikeeva.finance.dto.user.ChangeRoleRequest;
 import ru.anikeeva.finance.dto.user.ReadUserListResponse;
@@ -23,6 +25,8 @@ import ru.anikeeva.finance.dto.user.ReadUserResponse;
 import ru.anikeeva.finance.dto.user.UpdateUserRequest;
 import ru.anikeeva.finance.security.impl.UserDetailsImpl;
 import ru.anikeeva.finance.services.auth.PasswordService;
+import ru.anikeeva.finance.services.mail.MailService;
+import ru.anikeeva.finance.services.mail.VerificationTokenService;
 import ru.anikeeva.finance.services.user.UserService;
 
 import java.util.UUID;
@@ -34,6 +38,8 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
     private final PasswordService passwordService;
+    private final MailService mailService;
+    private final VerificationTokenService verificationTokenService;
 
     @GetMapping("/{id}")
     @Operation(summary = "Просмотр профиля пользователя",

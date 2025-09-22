@@ -23,7 +23,7 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsServiceImpl;
     private final JwtAuthenticationFilter jwtFilter;
 
-    private static final String[] AUTH_WHITELIST = {"/api/v1/auth/**", "/api/v1/registration/**"};
+    private static final String[] AUTH_WHITELIST = {"/api/v1/auth/**", "/api/v1/registration/**", "/api/v1/emails/**"};
 
     @Bean
     public PasswordEncoder passwordEncoder() {

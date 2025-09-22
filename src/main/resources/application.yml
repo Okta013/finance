@@ -11,6 +11,19 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  mail:
+    url_for_confirm: ${CONFIRM_URL}
+    minutes_to_confirm: ${CONFIRM_MINUTES}
+    host: ${MAIL_HOST}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    port: ${MAIL_PORT}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 currency-rates:
   url:
