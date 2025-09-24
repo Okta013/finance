@@ -49,6 +49,7 @@ public class AuthenticationService {
         String username = request.username();
         String ip = ipAddressService.getClientIP(httpServletRequest);
         if (loginAttemptService.isBlocked(username, ip)) {
+            log.error("Пользователь {} с ip {} заблокирован из-за превышения числа попыток входа", username, ip);
             throw new LoginLockException("Пользователь заблокирован из-за превышения числа попыток входа");
         }
         try {
@@ -57,6 +58,7 @@ public class AuthenticationService {
             );
             if (authentication == null || !authentication.isAuthenticated()) {
                 loginAttemptService.loginFailed(username, ip);
+                log.info("Попытка авторизации с неверным паролем для логина {}", username);
                 throw new BadCredentialsException("Неверное сочетание логина и пароля");
             }
             loginAttemptService.loginSucceeded(username, ip);
@@ -78,15 +80,18 @@ public class AuthenticationService {
     public AuthResponse refresh(final HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = extractRefreshTokenFromCookie(request);
         if (refreshToken == null || refreshToken.isEmpty()) {
+            log.error("Передан пустой refresh-токен для обновления access-токена");
             throw new BadCredentialsException("Refresh-токен пуст");
         }
         String username = jwtService.extractUsername(refreshToken);
         log.info("Обновление токена доступа для пользователя {}", username);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         if (!jwtService.validateToken(refreshToken, userDetails)) {
+            log.info("Попытка получения access-токена по невалидному refresh-токену {}", refreshToken);
             throw new BadCredentialsException("Refresh-токен не прошел валидацию");
         }
         if (refreshTokenBlackListRepository.existsByToken(generateTokenHash(refreshToken))) {
+            log.info("Попытка получения access-токена по отозванному refresh-токену {}", refreshToken);
             throw new BadCredentialsException("Refresh-токен был отозван");
         }
         String newAccessToken = jwtService.generateAccessToken(userDetails);
@@ -104,17 +109,17 @@ public class AuthenticationService {
     public void logout(final HttpServletRequest request) {
         String refreshToken = extractRefreshTokenFromCookie(request);
         if (refreshToken == null || refreshToken.isEmpty()) {
-            throw new BadCredentialsException("Refresh-токен не найден");
+            log.info("Не удалось инвалидировать Refresh-токен при выходе из аккаунта не найден, т.к. он не найден");
         }
         User user = userRepository.findByUsername(jwtService.extractUsername(refreshToken)).orElseThrow(() ->
             new UsernameNotFoundException("Пользователь не найден"));
         log.info("Попытка выхода из аккаунта для пользователя {}", user.getUsername());
         if (!jwtService.validateToken(refreshToken, UserDetailsImpl.build(user))) {
-            throw new BadCredentialsException("Refresh-токен не валиден");
+            log.info("Не удалось инвалидировать Refresh-токен при выходе из аккаунта не найден, т.к. он невалиден");
         }
         String tokenHash = generateTokenHash(refreshToken);
         if (refreshTokenBlackListRepository.existsByToken(tokenHash)) {
-            throw new BadCredentialsException("Refresh-токен был отозван");
+            log.info("Не удалось инвалидировать Refresh-токен при выходе из аккаунта не найден, т.к. он уже был отозван");
         }
         refreshTokenBlackListRepository.save(RefreshTokenBlackList.builder()
             .token(tokenHash)
@@ -130,6 +135,7 @@ public class AuthenticationService {
         refreshTokenCookie.setPath("/");
         refreshTokenCookie.setMaxAge(REFRESH_TOKEN_EXPIRE);
         response.addCookie(refreshTokenCookie);
+        log.info("Refresh-токен был добавлен в cookie");
     }
 
     private String extractRefreshTokenFromCookie(final HttpServletRequest request) {

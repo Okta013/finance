@@ -65,11 +65,14 @@ public class TransactionService {
         transaction.setAmountInBaseCurrency(amountInBaseCurrency);
         transaction.setUser(user);
         transactionRepository.save(transaction);
+        log.info("Создана {}-транзакция {} на сумму {} {} для пользователя {}", request.type(), transaction.getId(),
+            request.initialAmount(), request.initialCurrency(), user.getUsername());
         switch (request.type()) {
             case INCOME -> user.setBalance(user.getBalance().add(request.initialAmount()));
             case EXPENSE -> user.setBalance(user.getBalance().subtract(request.initialAmount()));
         }
         userRepository.save(user);
+        log.info("Баланс пользователя изменен после выполнения транзакции {}", transaction.getId());
         return new CreateTransactionResponse(transaction.getId(), true);
     }
 
@@ -91,18 +94,21 @@ public class TransactionService {
         Transaction transaction = findTransactionForUser(currentUser, transactionId);
         if (request.type() == null && request.category() == null && request.initialAmount() == null &&
             request.initialCurrency() == null && request.dateTime() == null && request.description() == null) {
+            log.info("Попытка изменить транзакцию {} с пустым запросом", transaction.getId());
             throw new EmptyRequestException("Запрос на изменение транзакции пустой");
         }
         ETransactionType type = request.type() != null ? request.type() : transaction.getType();
         checkBalanceForTransaction(currentUser, type, request.initialAmount());
         transactionMapper.updateTransactionFromUpdateTransactionRequest(request, transaction);
         transactionRepository.save(transaction);
+        log.info("Детали транзакции {} были изменены пользователем", transaction.getId());
         return transactionMapper.toTransactionResponse(transaction);
     }
 
     public void deleteTransaction(final UserDetailsImpl currentUser, final UUID transactionId) {
         Transaction transaction = findTransactionForUser(currentUser, transactionId);
         transactionRepository.delete(transaction);
+        log.info("Транзакция {} была удалена пользователем", transaction.getId());
     }
 
     public BigDecimal getAmountByTransactionType(final User user, final LocalDateTime startDate,
@@ -128,9 +134,10 @@ public class TransactionService {
                 .addString("jobId", UUID.randomUUID().toString())
                 .toJobParameters();
             asyncJobLauncher.run(importJob, params);
+            log.info("Инициирована загрузка csv-файла с транзакциями пользователем {}", currentUser.getUsername());
             return "Импорт файла запущен";
         } catch (Exception e) {
-            log.error("Ошибка загрузки csv-файла", e);
+            log.error("Ошибка загрузки csv-файла пользователем {}", currentUser.getUsername(), e);
             throw new IntegrationException("Ошибка загрузки файла .csv");
         }
     }
@@ -149,6 +156,7 @@ public class TransactionService {
         Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(() ->
             new EntityNotFoundException("Транзакция не найдена"));
         if (!transaction.getUser().getId().equals(currentUser.getId())) {
+            log.info("Попытка получить транзакцию другого пользователя со стороны {}", currentUser.getUsername());
             throw new NoRightsException("Транзакция не принадлежит текущему пользователю");
         }
         return transaction;

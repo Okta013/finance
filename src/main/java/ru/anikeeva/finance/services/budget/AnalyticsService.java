@@ -43,6 +43,7 @@ public class AnalyticsService {
         User user = userService.findUserByUsername(currentUser.getUsername());
         LocalDateTime startDate = parseDateTime(startDateString);
         LocalDateTime endDate = parseDateTime(endDateString);
+        log.info("Запрос аналитики транзакций за период пользователем {}", user.getUsername());
         return new AnalyticsTransactionsResponse(
             transactionService.getAmountByTransactionType(user, startDate, endDate,  ETransactionType.INCOME),
             transactionService.getAmountByTransactionType(user, startDate, endDate, ETransactionType.EXPENSE)
@@ -65,6 +66,7 @@ public class AnalyticsService {
         }
         BigDecimal amount = transactions.stream().map(Transaction::getInitialAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         List<AnalyticsCategoryResponse> categoriesResponses = getAnalyticsCategoryResponses(transactions, amount);
+        log.info("Запрос аналитики транзакций по категориям за период пользователем {}", user.getUsername());
         return new AnalyticsCategoriesResponse(categoriesResponses);
     }
 
@@ -121,6 +123,7 @@ public class AnalyticsService {
             expenseTransactionSecondPeriod,
             "Расходы"
         );
+        log.info("Запрос аналитики транзакций со сравнением метрик за 2 периода пользователем {}", user.getUsername());
         return new AnalyticsMetricsResponse(incomeDiffs, expenseDiffs, incomeCategoriesDiffResponses,
             expenseCategoriesDiffResponses);
     }

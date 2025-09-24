@@ -65,6 +65,8 @@ public class MailService {
 
             helper.setText(htmlContent, true);
             mailSender.send(mailMessage);
+            log.info("Письмо с подтверждением email отправлено на адрес {} пользователю {}", user.getEmail(),
+                currentUser.getUsername());
         } catch (MessagingException e) {
             throw new IntegrationException("Произошла ошибка при попытке отправки письма с подтверждением на указанный email");
         }

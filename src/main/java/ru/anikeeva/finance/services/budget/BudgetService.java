@@ -68,6 +68,7 @@ public class BudgetService {
         User user = userService.findUserByUsername(currentUser.getUsername());
         Budget budget = findBudgetById(id);
         if (!user.getId().equals(budget.getUser().getId())) {
+            log.info("Попытка запросить бюджет другого пользователя со стороны {}", currentUser.getUsername());
             throw new NoRightsException("У пользователя нет прав на просмотр выбранного бюджета");
         }
         return budgetMapper.fromBudget(budget);
@@ -80,6 +81,7 @@ public class BudgetService {
         }
         Budget budget = findBudgetById(id);
         if (!currentUser.getId().equals(budget.getUser().getId())) {
+            log.info("Попытка изменения бюджета другого пользователя со стороны {}", currentUser.getUsername());
             throw new NoRightsException("У пользователя нет прав на изменение выбранного бюджета");
         }
         budgetMapper.updateBudgetFromCreateBudgetRequest(request, budget);
@@ -91,6 +93,7 @@ public class BudgetService {
         User user = userService.findUserByUsername(currentUser.getUsername());
         Budget budget = findBudgetById(id);
         if (!user.getId().equals(budget.getUser().getId())) {
+            log.info("Попытка удаления бюджета другого пользователя со стороны {}", currentUser.getUsername());
             throw new NoRightsException("У пользователя нет прав на удаление выбранного бюджета");
         }
         budgetRepository.delete(budget);

@@ -52,6 +52,8 @@ public class LoginAttemptService {
         try {
             redisTemplate.delete(blockedKey(username, ip));
             redisTemplate.delete(attemptsKey(username, ip));
+            log.info("Аутентификация пользователя {} с ip {} успешна, данные о предыдущих попытках входа очищены",
+                username, ip);
         } catch (RedisConnectionFailureException e) {
             log.error("Соединение с Redis было потеряно во время записи успешной попытки аутентификации " +
                 "пользователя {} с ip {}: {}", username, ip, e.getMessage());
@@ -66,9 +68,12 @@ public class LoginAttemptService {
             String key = attemptsKey(username, ip);
             Long attempts = valueOperations.increment(key);
             if (attempts != null && attempts == 1) {
+                log.info("Число неудачных попыток входа для пользователя {} с ip {} увеличено на 1", username, ip);
                 redisTemplate.expire(key, Duration.ofSeconds(blockTimeInSeconds));
             }
             if (attempts != null && attempts >= maxAttempts) {
+                log.info("Пользователь {} с ip {} заблокирован на 15 минут в результате превышения числа попыток входа",
+                    username, ip);
                 valueOperations.set(blockedKey(username, ip), "blocked", Duration.ofSeconds(blockTimeInSeconds));
             }
         } catch (RedisConnectionFailureException e) {

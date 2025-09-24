@@ -61,10 +61,12 @@ public class UserService {
         User user = findUserById(currentUser.getId());
         checkRightsForActionsWithUsers(user, id);
         if (request.username() == null && request.email() == null && request.baseCurrency() == null) {
+            log.info("Попытка изменения профиля пользователя {} с пустым запросом", currentUser.getId());
             throw new IllegalArgumentException("Запрос на изменение профиля пуст");
         }
         userMapper.updateUserFromUpdateUserRequest(request, user);
         userRepository.save(user);
+        log.info("Детали профиля пользователя {} изменены по его запросу", currentUser.getUsername());
     }
 
     public void changeRole(final UUID id, final ChangeRoleRequest request) {
@@ -74,28 +76,33 @@ public class UserService {
         }
         user.setRole(request.newRole());
         userRepository.save(user);
+        log.info("Роль пользователя {} изменена на {}", user.getUsername(), request.newRole());
     }
 
     public void deleteProfile(final UserDetailsImpl currentUser) {
         User user = findUserById(currentUser.getId());
         user.setIsEnabled(false);
         userRepository.save(user);
+        log.info("Профиль пользователя {} удален", user.getUsername());
     }
 
     public void changeActive(final UUID id) {
         User user = findUserById(id);
         user.setIsEnabled(!user.getIsEnabled());
         userRepository.save(user);
+        log.info("Изменен флаг активности пользователя {}", user.getUsername());
     }
 
     public void confirmEmail(final User user) {
         user.setIsEmailActive(true);
         user.setIsMailingAgree(true);
         userRepository.save(user);
+        log.info("Пользователь {} подтвердил электронную почту {}", user.getUsername(), user.getEmail());
     }
 
     private void checkRightsForActionsWithUsers(final User user, final UUID id) {
         if (!user.getId().equals(id) && !user.getRole().equals(ERole.ADMIN)) {
+            log.info("Попытка просмотра профиля другого пользователя со стороны {}", user.getUsername());
             throw new NoRightsException("У пользователя нет прав на просмотр выбранного профиля");
         }
     }
