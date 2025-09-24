@@ -40,18 +40,14 @@ public class SecurityConfig {
         return http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(
-                requests -> {
-                    requests.requestMatchers(AUTH_WHITELIST).permitAll()
-                        .anyRequest().authenticated();
-                }
+                requests -> requests.requestMatchers(AUTH_WHITELIST).permitAll()
+                    .anyRequest().authenticated()
             )
-            .exceptionHandling(exception -> {
-                exception.authenticationEntryPoint((request, response, authException) -> {
-                    response.setContentType("application/json");
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write(authException.getMessage());
-                });
-            })
+            .exceptionHandling(exception -> exception.authenticationEntryPoint((request, response, authException) -> {
+                response.setContentType("application/json");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write(authException.getMessage());
+            }))
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
             .userDetailsService(userDetailsServiceImpl)
             .build();

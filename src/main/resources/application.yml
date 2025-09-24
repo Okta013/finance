@@ -33,3 +33,7 @@ currency-rates:
       additional: latest.json
   open-exchange:
     api-id: ${OPEN-EXCHANGE-API-ID}
+
+auth-attempt:
+  max-attempt: 5
+  block-time-in-seconds: 900

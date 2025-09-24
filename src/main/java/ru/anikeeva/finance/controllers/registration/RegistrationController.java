@@ -2,6 +2,7 @@ package ru.anikeeva.finance.controllers.registration;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,8 @@ public class RegistrationController {
             "и аутентифицирует его")
     @PostMapping
     public ResponseEntity<AuthResponse> register(@RequestBody @Valid SignUpRequest signUpRequest,
+                                                 HttpServletRequest httpServletRequest,
                                                  HttpServletResponse response) {
-        return ResponseEntity.ok(registrationService.register(signUpRequest, response));
+        return ResponseEntity.ok(registrationService.register(signUpRequest, httpServletRequest, response));
     }
 }
