@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -82,6 +83,33 @@ public class GlobalExceptionHandler {
             request.getRequestURI()
         );
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(LoginLockException.class)
+    public ResponseEntity<ErrorResponse> handleLoginLockException(LoginLockException e, HttpServletRequest request) {
+        log.error("Перехвачен LoginLockException: {} | URI: {}", e.getMessage(), request.getRequestURI());
+        ErrorResponse error = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.LOCKED.value(),
+            HttpStatus.LOCKED.getReasonPhrase(),
+            e.getMessage(),
+            request.getRequestURI()
+        );
+        return new ResponseEntity<>(error, HttpStatus.LOCKED);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException e,
+                                                                       HttpServletRequest request) {
+        log.error("Перехвачен BadCredentialsException: {} | URI: {}", e.getMessage(), request.getRequestURI());
+        ErrorResponse error = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.FORBIDDEN.value(),
+            HttpStatus.FORBIDDEN.getReasonPhrase(),
+            e.getMessage(),
+            request.getRequestURI()
+        );
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(Exception.class)

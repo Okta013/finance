@@ -26,8 +26,9 @@ public class AuthenticationController {
         description = "Принимает логин и пароль, при успехе возвращает access-токен в ответе и refresh-токен в cookie")
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody @Valid AuthRequest authRequest,
+                                              HttpServletRequest httpServletRequest,
                                               HttpServletResponse response) {
-        return ResponseEntity.ok(authenticationService.login(authRequest, response));
+        return ResponseEntity.ok(authenticationService.login(authRequest, httpServletRequest, response));
     }
 
     @Operation(summary = "Обновление токена доступа",

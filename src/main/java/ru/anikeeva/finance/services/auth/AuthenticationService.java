@@ -11,16 +11,18 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import ru.anikeeva.finance.dto.auth.AuthRequest;
 import ru.anikeeva.finance.dto.auth.AuthResponse;
-import ru.anikeeva.finance.entities.user.User;
 import ru.anikeeva.finance.entities.auth.RefreshTokenBlackList;
-import ru.anikeeva.finance.repositories.user.UserRepository;
+import ru.anikeeva.finance.entities.user.User;
+import ru.anikeeva.finance.exceptions.LoginLockException;
 import ru.anikeeva.finance.repositories.auth.RefreshTokenBlackListRepository;
+import ru.anikeeva.finance.repositories.user.UserRepository;
 import ru.anikeeva.finance.security.impl.UserDetailsImpl;
 import ru.anikeeva.finance.security.impl.UserDetailsServiceImpl;
 import ru.anikeeva.finance.security.jwt.JwtService;
@@ -36,25 +38,40 @@ public class AuthenticationService {
     private final UserDetailsServiceImpl userDetailsService;
     private final RefreshTokenBlackListRepository refreshTokenBlackListRepository;
     private final UserRepository userRepository;
+    private final IpAddressService ipAddressService;
+    private final LoginAttemptService loginAttemptService;
 
     private static final int REFRESH_TOKEN_EXPIRE = 60 * 24 * 60 * 60;
 
     @Transactional
-    public AuthResponse login(final AuthRequest request, HttpServletResponse response) {
-        Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(request.username(), request.password())
-        );
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new BadCredentialsException("Неверное сочетание логина и пароля");
+    public AuthResponse login(final AuthRequest request, HttpServletRequest httpServletRequest,
+                              HttpServletResponse response) {
+        String username = request.username();
+        String ip = ipAddressService.getClientIP(httpServletRequest);
+        if (loginAttemptService.isBlocked(username, ip)) {
+            throw new LoginLockException("Пользователь заблокирован из-за превышения числа попыток входа");
         }
-        log.info("Проводится аутентификация пользователя {}", request.username());
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String accessToken = jwtService.generateAccessToken(userDetails);
-        String refreshToken = jwtService.generateRefreshToken(userDetails);
-        addTokenToCookie(response, refreshToken);
-        log.info("Access- и Refresh-токены были выданы пользователю {}", request.username());
-        return new AuthResponse(accessToken);
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.username(), request.password())
+            );
+            if (authentication == null || !authentication.isAuthenticated()) {
+                loginAttemptService.loginFailed(username, ip);
+                throw new BadCredentialsException("Неверное сочетание логина и пароля");
+            }
+            loginAttemptService.loginSucceeded(username, ip);
+            log.info("Проводится аутентификация пользователя {}", request.username());
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String accessToken = jwtService.generateAccessToken(userDetails);
+            String refreshToken = jwtService.generateRefreshToken(userDetails);
+            addTokenToCookie(response, refreshToken);
+            log.info("Access- и Refresh-токены были выданы пользователю {}", request.username());
+            return new AuthResponse(accessToken);
+        } catch (AuthenticationException e) {
+            loginAttemptService.loginFailed(username, ip);
+            throw e;
+        }
     }
 
     @Transactional

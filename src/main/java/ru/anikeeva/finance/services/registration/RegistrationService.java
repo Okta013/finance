@@ -1,5 +1,6 @@
 package ru.anikeeva.finance.services.registration;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,8 @@ public class RegistrationService {
     private final AuthenticationService authenticationService;
 
     @Transactional
-    public AuthResponse register(final SignUpRequest request, HttpServletResponse response) {
+    public AuthResponse register(final SignUpRequest request, final HttpServletRequest httpServletRequest,
+                                 final HttpServletResponse response) {
         if (userRepository.existsByUsername(request.username())) {
             throw new IllegalArgumentException("Пользователь с указанным именем уже зарегистрирован");
         }
@@ -44,6 +46,6 @@ public class RegistrationService {
         log.info("Пользователь {} успешно создан", request.username());
         AuthRequest authRequest = new AuthRequest(request.username(), request.password());
         log.info("Пользователь {} автоматически аутентифицирован после регистрации", request.username());
-        return authenticationService.login(authRequest, response);
+        return authenticationService.login(authRequest, httpServletRequest, response);
     }
 }
