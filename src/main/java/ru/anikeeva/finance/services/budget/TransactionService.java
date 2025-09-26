@@ -115,7 +115,7 @@ public class TransactionService {
                                                  final LocalDateTime endDate, final ETransactionType transactionType) {
         return transactionRepository.findAllByUserIdAndTypeAndDateTimeBetween(user.getId(), transactionType, startDate,
             endDate).stream()
-            .map(Transaction::getInitialAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+            .map(Transaction::getAmountInBaseCurrency).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public List<Transaction> getAllTransactionsByType(final User user, final LocalDateTime startDate,
@@ -145,11 +145,13 @@ public class TransactionService {
     public BigDecimal calculateAmountWithBaseCurrency(final User user, final BigDecimal amount, final Currency currency) {
         Currency baseCurrency = user.getBaseCurrency();
         CurrencyRate currencyRate = currencyRateService.getCurrencyRateByCurrency(currency);
-        CurrencyRate baseCurrencyRate = currencyRateService.getCurrencyRateByCurrency(baseCurrency);
         BigDecimal rateInRub = currencyRate.getValueInRelationToBaseCurrency();
         if (baseCurrency.equals(Currency.getInstance("RUB"))) return amount.multiply(rateInRub);
-        else return amount.multiply(rateInRub).divide(baseCurrencyRate.getValueInRelationToBaseCurrency(), 6,
-            RoundingMode.HALF_UP);
+        else {
+            CurrencyRate baseCurrencyRate = currencyRateService.getCurrencyRateByCurrency(baseCurrency);
+            return amount.multiply(rateInRub).divide(baseCurrencyRate.getValueInRelationToBaseCurrency(), 6,
+                RoundingMode.HALF_UP);
+        }
     }
 
     private Transaction findTransactionForUser(final UserDetailsImpl currentUser, final UUID transactionId) {

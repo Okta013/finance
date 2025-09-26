@@ -43,6 +43,7 @@ public class AnalyticsService {
         User user = userService.findUserByUsername(currentUser.getUsername());
         LocalDateTime startDate = parseDateTime(startDateString);
         LocalDateTime endDate = parseDateTime(endDateString);
+        checkCorrectlyDates(startDate, endDate);
         log.info("Запрос аналитики транзакций за период пользователем {}", user.getUsername());
         return new AnalyticsTransactionsResponse(
             transactionService.getAmountByTransactionType(user, startDate, endDate,  ETransactionType.INCOME),
@@ -57,6 +58,7 @@ public class AnalyticsService {
         User user = userService.findUserByUsername(currentUser.getUsername());
         LocalDateTime startDate = parseDateTime(startDateString);
         LocalDateTime endDate = parseDateTime(endDateString);
+        checkCorrectlyDates(startDate, endDate);
         List<Transaction> transactions;
         if (transactionType.equalsIgnoreCase("income")) {
             transactions = transactionService.getAllTransactionsByType(user, startDate, endDate, ETransactionType.INCOME);
@@ -64,7 +66,7 @@ public class AnalyticsService {
         else {
             transactions = transactionService.getAllTransactionsByType(user, startDate, endDate, ETransactionType.EXPENSE);
         }
-        BigDecimal amount = transactions.stream().map(Transaction::getInitialAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal amount = transactions.stream().map(Transaction::getAmountInBaseCurrency).reduce(BigDecimal.ZERO, BigDecimal::add);
         List<AnalyticsCategoryResponse> categoriesResponses = getAnalyticsCategoryResponses(transactions, amount);
         log.info("Запрос аналитики транзакций по категориям за период пользователем {}", user.getUsername());
         return new AnalyticsCategoriesResponse(categoriesResponses);
@@ -77,6 +79,8 @@ public class AnalyticsService {
         LocalDateTime endDateFirst = parseDateTime(request.endDateForFirstPeriod());
         LocalDateTime startDateSecond = parseDateTime(request.startDateForSecondPeriod());
         LocalDateTime endDateSecond = parseDateTime(request.endDateForSecondPeriod());
+        checkCorrectlyDates(startDateFirst, endDateFirst);
+        checkCorrectlyDates(startDateSecond, endDateSecond);
         BigDecimal incomeAmountByFirstPeriod = transactionService.getAmountByTransactionType(user, startDateFirst,
             endDateFirst, ETransactionType.INCOME);
         BigDecimal expenseAmountByFirstPeriod = transactionService.getAmountByTransactionType(user, startDateFirst,
@@ -135,7 +139,7 @@ public class AnalyticsService {
         }
         Map<String, BigDecimal> sumsByCategory = transactions.stream()
             .collect(Collectors.groupingBy((Transaction t) -> t.getCategory().name(),
-                    Collectors.mapping(Transaction::getInitialAmount, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
+                    Collectors.mapping(Transaction::getAmountInBaseCurrency, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
         List<AnalyticsCategoryResponse> categoriesResponses = new ArrayList<>();
         for (var entry : sumsByCategory.entrySet()) {
             Double percents = entry.getValue()
@@ -161,7 +165,7 @@ public class AnalyticsService {
         BigDecimal amount = BigDecimal.ZERO;
         for (Transaction transaction : transactions) {
             if (transaction.getCategory().name().equals(category)) {
-                amount = amount.add(transaction.getInitialAmount());
+                amount = amount.add(transaction.getAmountInBaseCurrency());
             }
         }
         return amount;
@@ -248,5 +252,11 @@ public class AnalyticsService {
             isIncrease = secondAmount.compareTo(firstAmount) > 0;
         }
         return new DiffResult(diff, diffInPercents, isIncrease);
+    }
+
+    private void checkCorrectlyDates(final LocalDateTime startDate, final LocalDateTime endDate) {
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Дата начала периода не должна быть позже даты окончания");
+        }
     }
 }

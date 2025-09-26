@@ -9,8 +9,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 
 public class DateTimeValidator implements ConstraintValidator<DateTimeValid, String> {
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
-        .withResolverStyle(ResolverStyle.STRICT);
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
