@@ -41,6 +41,7 @@ public class RegistrationService {
             .baseCurrency(Currency.getInstance("RUB"))
             .isEnabled(true)
             .isEmailActive(false)
+            .isMailingAgree(false)
             .build();
         userRepository.save(user);
         log.info("Пользователь {} успешно создан", request.username());

@@ -5,6 +5,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import ru.anikeeva.finance.dto.budget.CreateBudgetRequest;
 import ru.anikeeva.finance.dto.budget.ReadBudgetResponse;
+import ru.anikeeva.finance.dto.budget.UpdateBudgetRequest;
 import ru.anikeeva.finance.entities.budget.Budget;
 
 @Mapper(componentModel = "spring",
@@ -14,5 +15,5 @@ public interface BudgetMapper {
 
     ReadBudgetResponse fromBudget(Budget budget);
 
-    void updateBudgetFromCreateBudgetRequest(CreateBudgetRequest request, @MappingTarget Budget budget);
+    void updateBudgetFromUpdateBudgetRequest(UpdateBudgetRequest request, @MappingTarget Budget budget);
 }

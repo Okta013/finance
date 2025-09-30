@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.anikeeva.finance.dto.budget.CreateBudgetRequest;
 import ru.anikeeva.finance.dto.budget.CreateBudgetResponse;
 import ru.anikeeva.finance.dto.budget.ReadBudgetResponse;
+import ru.anikeeva.finance.dto.budget.UpdateBudgetRequest;
 import ru.anikeeva.finance.security.impl.UserDetailsImpl;
 import ru.anikeeva.finance.services.budget.BudgetService;
 
@@ -65,7 +66,7 @@ public class BudgetController {
     public ResponseEntity<ReadBudgetResponse> updateBudget(
         @AuthenticationPrincipal UserDetailsImpl currentUser,
         @PathVariable UUID id,
-        @RequestBody CreateBudgetRequest request
+        @RequestBody @Valid UpdateBudgetRequest request
     ) {
         return ResponseEntity.ok(budgetService.updateBudget(currentUser, id, request));
     }
