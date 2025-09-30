@@ -149,7 +149,7 @@ public class TransactionService {
         if (baseCurrency.equals(Currency.getInstance("RUB"))) return amount.multiply(rateInRub);
         else {
             CurrencyRate baseCurrencyRate = currencyRateService.getCurrencyRateByCurrency(baseCurrency);
-            return amount.multiply(rateInRub).divide(baseCurrencyRate.getValueInRelationToBaseCurrency(), 6,
+            return amount.multiply(rateInRub).divide(baseCurrencyRate.getValueInRelationToBaseCurrency(), 2,
                 RoundingMode.HALF_UP);
         }
     }
