@@ -51,9 +51,9 @@ public class UserService {
     }
 
     public Page<ReadUserListResponse> getAllUsers(final int page, final int size, final Boolean filter) {
-        Page<User> users = userRepository.findAll(PageRequest.of(page, size));
-        if (filter != null && filter) users.filter(User::getIsEnabled);
-        else if (filter != null && !filter) users.filter(u -> u.getIsEnabled() == false);
+        Page<User> users;
+        if (filter == null) users = userRepository.findAll(PageRequest.of(page, size));
+        else users = userRepository.findAllByIsEnabled(filter, PageRequest.of(page, size));
         return users.map(userMapper::toReadUserListResponse);
     }
 
@@ -102,8 +102,8 @@ public class UserService {
 
     private void checkRightsForActionsWithUsers(final User user, final UUID id) {
         if (!user.getId().equals(id) && !user.getRole().equals(ERole.ADMIN)) {
-            log.info("Попытка просмотра профиля другого пользователя со стороны {}", user.getUsername());
-            throw new NoRightsException("У пользователя нет прав на просмотр выбранного профиля");
+            log.info("Попытка просмотра или изменения профиля другого пользователя со стороны {}", user.getUsername());
+            throw new NoRightsException("У пользователя нет прав на просмотр и изменение выбранного профиля");
         }
     }
 }

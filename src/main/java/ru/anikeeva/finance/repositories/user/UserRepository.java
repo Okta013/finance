@@ -20,9 +20,13 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     boolean existsByUsername(String username);
 
+    boolean existsByEmail(String email);
+
     @Modifying
     @Query("UPDATE User u SET u.balance = u.balance + :changes WHERE u.id = :id")
     int updateBalance(@Param("id") UUID id, @Param("changes") BigDecimal changes);
 
     Page<User> findAll(@NonNull Pageable pageable);
+
+    Page<User> findAllByIsEnabled(@NonNull Boolean isEnabled, @NonNull Pageable pageable);
 }

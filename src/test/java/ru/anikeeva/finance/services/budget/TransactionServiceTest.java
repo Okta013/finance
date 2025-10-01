@@ -571,12 +571,12 @@ public class TransactionServiceTest {
         BigDecimal amount = transactionData.secondInitialAmount;
         Currency currency = transactionData.usdCurrency;
         CurrencyRate usdCurrencyRate = transactionData.usdCurrencyRate;
-        BigDecimal expectedAmount = BigDecimal.valueOf(83610);
+        BigDecimal expectedAmount = BigDecimal.valueOf(83610.00);
 
         when(currencyRateService.getCurrencyRateByCurrency(currency)).thenReturn(usdCurrencyRate);
         BigDecimal actualAmount = transactionService.calculateAmountWithBaseCurrency(user, amount, currency);
 
-        assertEquals(expectedAmount, actualAmount);
+        assertTrue(expectedAmount.compareTo(actualAmount) == 0);
     }
 
     @Test

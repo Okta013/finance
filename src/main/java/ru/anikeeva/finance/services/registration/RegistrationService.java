@@ -32,6 +32,9 @@ public class RegistrationService {
         if (userRepository.existsByUsername(request.username())) {
             throw new IllegalArgumentException("Пользователь с указанным именем уже зарегистрирован");
         }
+        if(userRepository.existsByEmail(request.email())) {
+            throw new IllegalArgumentException("Пользователь с указанным email уже зарегистрирован");
+        }
         User user = User.builder()
             .username(request.username())
             .email(request.email())
