@@ -15,7 +15,7 @@ public class TransactionFieldSetMapper implements FieldSetMapper<TransactionImpo
     @Override
     @NonNull
     public TransactionImportDto mapFieldSet(FieldSet fieldSet) {
-        String dateStr = fieldSet.readString("date_time");
+        String dateStr = fieldSet.readString("dateTime");
         LocalDateTime dateTime = null;
         if (!dateStr.isEmpty()) {
             try {

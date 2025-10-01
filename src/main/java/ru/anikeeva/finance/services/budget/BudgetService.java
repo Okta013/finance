@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import ru.anikeeva.finance.dto.budget.CreateBudgetRequest;
 import ru.anikeeva.finance.dto.budget.CreateBudgetResponse;
 import ru.anikeeva.finance.dto.budget.ReadBudgetResponse;
+import ru.anikeeva.finance.dto.budget.UpdateBudgetRequest;
 import ru.anikeeva.finance.dto.notifications.BudgetNotification;
 import ru.anikeeva.finance.entities.budget.Budget;
 import ru.anikeeva.finance.entities.budget.Transaction;
@@ -46,6 +47,8 @@ public class BudgetService {
     private final TransactionRepository transactionRepository;
     private final WebSocketNotificationService notificationService;
 
+    private final static BigDecimal EXCESS_PERCENTAGE = BigDecimal.valueOf(0.8);
+
     public CreateBudgetResponse createBudget(final UserDetailsImpl currentUser, final CreateBudgetRequest request) {
         User user = userService.findUserByUsername(currentUser.getUsername());
         if (budgetRepository.existsByUserAndPeriodAndCategory(user, request.period(), request.category())) {
@@ -75,7 +78,7 @@ public class BudgetService {
     }
 
     public ReadBudgetResponse updateBudget(final UserDetailsImpl currentUser, final UUID id,
-                                           final CreateBudgetRequest request) {
+                                           final UpdateBudgetRequest request) {
         if (request.limitAmount() == null && request.category() == null && request.period() == null) {
             throw new IllegalArgumentException("Запрос на изменение бюджета пуст");
         }
@@ -84,7 +87,7 @@ public class BudgetService {
             log.info("Попытка изменения бюджета другого пользователя со стороны {}", currentUser.getUsername());
             throw new NoRightsException("У пользователя нет прав на изменение выбранного бюджета");
         }
-        budgetMapper.updateBudgetFromCreateBudgetRequest(request, budget);
+        budgetMapper.updateBudgetFromUpdateBudgetRequest(request, budget);
         budgetRepository.save(budget);
         return budgetMapper.fromBudget(budget);
     }
@@ -158,7 +161,7 @@ public class BudgetService {
             startDate, endDate).stream().map(Transaction::getInitialAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal consumed = periodAmount.add(amount);
         BigDecimal limit = periodBudget.getLimitAmount();
-        BigDecimal threshold = limit.multiply(new BigDecimal("0.8"));
+        BigDecimal threshold = limit.multiply(EXCESS_PERCENTAGE);
 
         if (consumed.compareTo(threshold) >= 0 && consumed.compareTo(limit) < 0) {
             notificationService.sendBudgetWarning(user.getId().toString(), new BudgetNotification(

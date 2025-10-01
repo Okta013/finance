@@ -56,12 +56,6 @@ public class AuthenticationService {
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.username(), request.password())
             );
-            if (authentication == null || !authentication.isAuthenticated()) {
-                loginAttemptService.loginFailed(username, ip);
-                log.info("Попытка авторизации с неверным паролем для логина {}", username);
-                throw new BadCredentialsException("Неверное сочетание логина и пароля");
-            }
-            loginAttemptService.loginSucceeded(username, ip);
             log.info("Проводится аутентификация пользователя {}", request.username());
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -69,9 +63,11 @@ public class AuthenticationService {
             String refreshToken = jwtService.generateRefreshToken(userDetails);
             addTokenToCookie(response, refreshToken);
             log.info("Access- и Refresh-токены были выданы пользователю {}", request.username());
+            loginAttemptService.loginSucceeded(username, ip);
             return new AuthResponse(accessToken);
         } catch (AuthenticationException e) {
             loginAttemptService.loginFailed(username, ip);
+            log.info("Попытка авторизации с неверным паролем для логина {}", username);
             throw e;
         }
     }
@@ -108,18 +104,18 @@ public class AuthenticationService {
     @Transactional
     public void logout(final HttpServletRequest request) {
         String refreshToken = extractRefreshTokenFromCookie(request);
-        if (refreshToken == null || refreshToken.isEmpty()) {
-            log.info("Не удалось инвалидировать Refresh-токен при выходе из аккаунта не найден, т.к. он не найден");
-        }
         User user = userRepository.findByUsername(jwtService.extractUsername(refreshToken)).orElseThrow(() ->
             new UsernameNotFoundException("Пользователь не найден"));
         log.info("Попытка выхода из аккаунта для пользователя {}", user.getUsername());
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            log.info("Не удалось инвалидировать Refresh-токен при выходе из аккаунта, т.к. передано пустое значение");
+        }
         if (!jwtService.validateToken(refreshToken, UserDetailsImpl.build(user))) {
-            log.info("Не удалось инвалидировать Refresh-токен при выходе из аккаунта не найден, т.к. он невалиден");
+            log.info("Не удалось инвалидировать Refresh-токен при выходе из аккаунта, т.к. он невалиден");
         }
         String tokenHash = generateTokenHash(refreshToken);
         if (refreshTokenBlackListRepository.existsByToken(tokenHash)) {
-            log.info("Не удалось инвалидировать Refresh-токен при выходе из аккаунта не найден, т.к. он уже был отозван");
+            log.info("Не удалось инвалидировать Refresh-токен при выходе из аккаунта, т.к. он уже был отозван");
         }
         refreshTokenBlackListRepository.save(RefreshTokenBlackList.builder()
             .token(tokenHash)

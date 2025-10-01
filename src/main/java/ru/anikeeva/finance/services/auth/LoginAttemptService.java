@@ -67,8 +67,11 @@ public class LoginAttemptService {
         try {
             String key = attemptsKey(username, ip);
             Long attempts = valueOperations.increment(key);
+            log.info("Число неудачных попыток входа для пользователя {} с ip {} увеличено на 1 и равно {}",
+                username, ip, attempts);
             if (attempts != null && attempts == 1) {
-                log.info("Число неудачных попыток входа для пользователя {} с ip {} увеличено на 1", username, ip);
+                log.info("Срок жизни ключа {} попыток пользователя {} установлен на {} в результате первой неудачной " +
+                    "попытки", key, username, blockTimeInSeconds);
                 redisTemplate.expire(key, Duration.ofSeconds(blockTimeInSeconds));
             }
             if (attempts != null && attempts >= maxAttempts) {

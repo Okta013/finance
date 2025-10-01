@@ -20,7 +20,7 @@ public class PasswordService {
 
     public void changePassword(final UserDetailsImpl currentUser, final ChangePasswordRequest request) {
         User user = userService.findUserById(currentUser.getId());
-        if (!passwordEncoder.matches(request.newPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.oldPassword(), user.getPassword())) {
             log.info("Попытка смены пароля пользователем {} с указанием неверного старого пароля",
                 currentUser.getUsername());
             throw new IllegalArgumentException("Старый пароль неверен");

@@ -60,7 +60,7 @@ public class TransactionProcessor implements ItemProcessor<TransactionImportDto,
             .initialAmount(item.initialAmount())
             .initialCurrency(initialCurrency)
             .amountInBaseCurrency(amountInBaseCurrency)
-            .dateTime(item.date())
+            .dateTime(item.dateTime())
             .description(item.description())
             .jobId(this.jobId)
             .build();

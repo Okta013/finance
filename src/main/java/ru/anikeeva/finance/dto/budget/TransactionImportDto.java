@@ -20,7 +20,7 @@ public record TransactionImportDto(
     String initialCurrency,
 
     @Schema(description = "Дата и время транзакции в формате YYYY-MM-DD'T'HH:mm:ss")
-    LocalDateTime date,
+    LocalDateTime dateTime,
 
     @Schema(description = "Описание транзакции (не обязательное поле)")
     String description

@@ -1,7 +1,6 @@
 package ru.anikeeva.finance.dto.budget;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import ru.anikeeva.finance.entities.budget.Transaction;
 import ru.anikeeva.finance.entities.enums.ETransactionCategory;
 import ru.anikeeva.finance.entities.enums.ETransactionType;
 
@@ -34,15 +33,4 @@ public record TransactionResponse(
     String description
 )
 {
-    public static TransactionResponse fromTransaction(Transaction transaction) {
-        return new TransactionResponse(
-            transaction.getId(),
-            transaction.getType(),
-            transaction.getCategory(),
-            transaction.getInitialAmount(),
-            transaction.getInitialCurrency(),
-            transaction.getDateTime(),
-            transaction.getDescription()
-        );
-    }
 }
